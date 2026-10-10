@@ -1,0 +1,207 @@
+- **Analyse des valeurs manquantes** :
+    - Pas de valeurs manquante pour **patid**	et variable cibles **post_index_exacerbations365**
+    - En comparant, pour chaque variable, la proportion de valeurs manquantes entre les deux classes de la cible via un indicateur “missing” (0/1) et un test χ² d’indépendance (α = 0,05), on observe que les taux de manquants sont globalement homogènes entre classe_0 et classe_1, généralement autour de 9 à 13 %, et que pour la quasi-totalité des variables la différence entre classes n’est pas statistiquement significative (p ≥ 0,05), ce qui est compatible avec un mécanisme MCAR vis-à-vis de la classe. Une exception nette apparaît pour gerd (p = 0,004), où la proportion de valeurs manquantes diffère significativement entre les classes, indiquant une dépendance à la variable cible et donc un mécanisme MAR localisé. La [Littérature](https://charonne-asso.fr/rgo-asthme/) clinique souligne que le reflux gastro-œsophagien est fréquent chez les patients asthmatiques, que ses symptômes sont peu spécifiques et souvent confondus avec ceux de l’asthme, et qu’il est généralement investigué de manière secondaire, notamment chez les patients présentant un asthme mal contrôlé ou des exacerbations répétées ; ces éléments sont cohérents avec l’observation selon laquelle la présence de valeurs manquantes pour la variable gerd dépend du statut clinique, c’est-à-dire de la classe.
+    
+    - Le dendrogramme des valeurs manquantes ne met pas en évidence de regroupements marqués entre les variables, suggérant une faible dépendance entre les patterns de données manquantes. Cette structure est compatible avec un mécanisme principalement MCAR ou faiblement MAR, sans indication d’un mécanisme MNAR dominant.
+    3 groupes de variables :
+        - **Variables de comorbidités ORL / respiratoires:**
+            - rhinitis
+            - sinusitis
+            - upper_respiratory_infection
+            - acute_bronchitis
+            - acute_laryngitis
+            - pneumonia
+
+        - **Variables de coûts:** 
+            - pre_asthma_charge
+            - pre_asthma_pharma_charge
+            - total_pre_index_charge
+            - log_charges
+            - log_asthma_charge
+        - **variables isolées:** 
+            - index_age
+            - female
+            - patid
+            - adherence
+            - total_pre_index_cannisters_365
+            - pre_asthma_days
+            - previous_asthma_drugs
+            - drug_s
+            - post_index_exacerbations365
+
+
+msno.matrix(df.to_pandas())
+# Les variables patid et post_index_exacerbations365 n ont pas de valeurs manquante 
+# Les valeurs manquantes sont présentes dans plusieurs variables, mais aucune colonne n’est entièrement manquante
+# valeurs manquantes est diffus et non 
+# L’absence de motif clair suggère que les données sont probablement MCAR ou MAR, rendant l’imputation appropriée.
+# Les données sont exploitables. Une imputation simple (médiane pour quantitatives, modalité majoritaire pour binaires) est justifiée, sans suppression massive de lignes.
+
+msno.bar(df.to_pandas())
+# A peut pres 10% des variables manquante 
+
+df.select((pl.all().null_count() / pl.len() * 100).round(2))
+
+msno.dendrogram(df.to_pandas())
+
+
+
+Chaque feuille = une variable
+
+La hauteur de fusion = similarité des patterns de manquants
+- Fusion basse → variables manquantes ensemble
+- Fusion haute → patterns indépendants
+
+1. Les manquants ne forment pas de blocs structurés évidents (Absence de gros clusters compacts) : peu de dépendance forte entre leurs valeurs manquantes
+2. Petits regroupements locaux (en bas) , souvent des variables cliniquement proches ou collectées ensemble . 
+On observe surtout des rapprochements entre :
+
+**Variables de comorbidités ORL / respiratoires:**
+- rhinitis
+- sinusitis
+- upper_respiratory_infection
+- acute_bronchitis
+- acute_laryngitis
+- pneumonia
+
+> Logique : diagnostics souvent renseignés ensemble dans le dossier clinique. 
+
+**Variables de coûts:** 
+
+- pre_asthma_charge
+- pre_asthma_pharma_charge
+- total_pre_index_charge
+- log_charges
+- log_asthma_charge
+
+> Logique : issues du même système de facturation.
+> Manquants potentiellement liés au processus de collecte.
+
+**Certaines variables restent isolées jusqu’en haut** : 
+Patterns de manquants indépendants
+- index_age
+- female
+- patid
+- adherence
+- total_pre_index_cannisters_365
+- pre_asthma_days
+- previous_asthma_drugs
+- drug_s
+- post_index_exacerbations365
+
+> Variables structurelles ou clés, quasi toujours renseignées, avec des manquants non corrélés aux autres.
+> Leur mécanisme de manquant est indépendant des autres
+
+
+Cnclusion : Le dendrogramme des valeurs manquantes ne met pas en évidence de regroupements marqués entre les variables, suggérant une faible dépendance entre les patterns de données manquantes. Cette structure est compatible avec un mécanisme principalement MCAR ou faiblement MAR, sans indication d’un mécanisme MNAR dominant.
+
+
+
+
+# Formattage binaire de notre classe
+
+target = "post_index_exacerbations365"
+
+df_bin = df.with_columns(
+    pl.when(pl.col(target).cast(pl.Int64, strict=False) > 0)
+      .then(1)
+      .otherwise(0)
+      .alias("target_bin")
+)
+
+# Calcul des % de manquants par classe
+
+vars_to_test = [
+    col for col in df.columns
+    if col not in [target, "patid"]
+]
+
+df_missing = (
+    df_bin
+    .select(
+        ["target_bin"] +
+        [
+            pl.col(v).is_null().cast(pl.Int8).alias(v)
+            for v in vars_to_test
+        ]
+    )
+)
+
+# Agrégation par classe
+df_missing_pct = (
+    df_missing
+    .group_by("target_bin")
+    .agg([
+        (pl.col(v).mean() * 100).alias(v)
+        for v in vars_to_test
+    ])
+)
+
+# Mise en forme final 
+
+df_missing_pct = (
+    df_missing_pct
+    .transpose(
+        include_header=True,
+        header_name="variable",
+        column_names=["classe_0", "classe_1"]
+    )
+)
+
+df_missing_pct
+
+
+La majorité des variables présentent des taux de valeurs manquantes très proches entre les classes, suggérant un mécanisme globalement compatible avec MCAR vis-à-vis de la variable cible. La variable GERD se distingue par un taux de manquants plus élevé dans la classe avec exacerbations, indiquant un mécanisme MAR localisé.
+
+
+
+results = []
+
+for var in vars_to_test:
+    tab = (
+        df_bin
+        .select([
+            pl.col(var).is_null().cast(pl.Int8).alias("missing"),
+            pl.col("target_bin")
+        ])
+        .to_pandas()
+    )
+
+    contingency = pd.crosstab(tab["missing"], tab["target_bin"])
+
+    # On teste seulement si les deux classes existent
+    if contingency.shape[0] == 2 and contingency.shape[1] == 2:
+        chi2, p, _, _ = chi2_contingency(contingency)
+        results.append({
+            "variable": var,
+            "p_value": p
+        })
+
+chi2_results = pd.DataFrame(results)
+chi2_results
+
+
+La comparaison des proportions de valeurs manquantes entre les classes, testée par un χ² d’indépendance, met en évidence une dépendance significative à la classe pour la variable GERD,
+
+
+La [Littérature](https://charonne-asso.fr/rgo-asthme/) clinique souligne que :
+
+- le RGO est fréquent chez les patients asthmatiques ;
+- ses symptômes (toux, gêne thoracique, dyspnée nocturne) sont peu spécifiques ;
+- ils peuvent être attribués à l’asthme lui-même, retardant ou empêchant le diagnostic ;
+- le RGO est souvent investigué secondairement, notamment chez les patients avec asthme mal contrôlé ou exacerbations répétées.
+
+> Cela confirme que le fait que la variable gerd soit manquante dépend du statut clinique (classe).
+
+La proportion de valeurs manquantes pour GERD est plus élevée dans la classe avec exacerbations, ce qui suggère une documentation moins systématique/plus difficile chez les patients présentant des épisodes récidivants, compatible avec un mécanisme MAR.
+
+Classe sans exacerbations (0)
+- → moins de valeurs manquantes GERD
+- → RGO plus souvent recherché 
+
+Classe avec exacerbations (1)
+- → plus de valeurs manquantes GERD
+- → RGO moins investigué , difficile a diagnostiqué
+
+
+En l’absence d’association détectable entre la présence de valeurs manquantes et la variable cible pour la majorité des variables, le mécanisme de données manquantes apparaît compatible avec MCAR conditionnel à la classe.

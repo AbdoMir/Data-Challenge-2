@@ -1,0 +1,25 @@
+# Asymétrie à droite (skew positif) : moyenne > médiane
+    # (queue longue vers les grandes valeurs)
+# Asymétrie à gauche (skew négatif) : moyenne < médiane
+    # (queue longue vers les petites valeurs)
+# Distribution à peu près symétrique : moyenne ≈ médiane
+
+# Interpretation skewness: mesure l’asymétrie d’une distribution.
+    # |skew| < 0.5 → asymétrie faible
+    # 0.5 ≤ |skew| < 1 → asymétrie modérée
+    # |skew| ≥ 1 → asymétrie forte
+
+# Interpretation kurtosis  : decris si la distribution a des queues lourdes
+# et si les valeurs extrêmes sont plus fréquentes que dans une gaussienne
+    # kurtosis ≈ 0 → proche d’une normale
+    # kurtosis > 0 → queues lourdes (valeurs extrêmes)
+    # kurtosis < 0 → distribution aplatie
+
+
+# IQR = Q3 − Q1
+# C’est l’intervalle qui contient les 50% centraux des valeurs.
+# Interprétation simple :
+
+# IQR petit → valeurs concentrées, faible variabilité.
+# IQR grand → valeurs dispersées, forte variabilité.
+# L’IQR est robuste aux outliers, contrairement à l’écarttype.

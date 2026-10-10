@@ -1,0 +1,21 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+.ruff_cache
+claude
+
+# Virtual environments
+.venv
+
+# Documents tiers, non redistribues.
+# L'article de Guillaudeux et al. 2023 reste cite dans le README ; le
+# memoire d'E. Arcay releve du meme principe. Ni l'un ni l'autre n'a a
+# figurer dans un depot public.
+docs/Guillaudeux et al. 2023.pdf
+docs/2025_ARCAY_Emmanuelle.pdf
+
+# Presentation de groupe : les noms des autres etudiants y sont visibles.
+docs/Presentation 2.pptx

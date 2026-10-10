@@ -1,0 +1,3 @@
+Pipeline 
+Convertir (cast) : int , float et cat 
+se
