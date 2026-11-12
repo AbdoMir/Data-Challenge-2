@@ -122,5 +122,3 @@ uv run --with notebook jupyter notebook --notebook-dir=notebook
 
 Projet réalisé en groupe dans le cadre du Master 1 : S2.
 
-- Groupe 3 : Abdo, Louise, Flora
-- Groupe 5 : Abdo, Talha, Flora
