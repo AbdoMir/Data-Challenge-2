@@ -16,7 +16,7 @@ Une seconde problématique porte sur la **confidentialité des données médical
 
 ```
 ├── Data/
-│   ├── trainDataDC2.csv.gz          # Jeu de données (2 089 patients)
+│   ├── trainDataDC2.csv.gz          # Jeu de données (14 575 patients)
 │   └── description_variables.md     # Dictionnaire des variables
 ├── notebook/
 │   ├── Projet0/EDA.ipynb                                   # Analyse exploratoire
